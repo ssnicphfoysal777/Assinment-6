@@ -1,6 +1,51 @@
-import React from 'react';
-
+'use client'
+import { useProductContext } from '@/context/product';
+import { useState } from 'react';
 const MyBuild = () => {
+    const { planlist, setPlanlist, savelist, setSavelist } =
+        useProductContext();
+    const [activeTab, setActiveTab] = useState<"plan" | "saved">("plan")
+
+    const [sortBy, setSortBy] = useState<'Duration' | 'Rating' | 'Calories'>('Duration')
+    const [orderID, setOrderID] = useState<number[]>([])
+
+    const currentList = activeTab === 'plan' ? planlist : savelist;
+
+
+    console.log(sortBy);
+    const sortedList = [...currentList].sort((a, b) => {
+        if (sortBy === 'Duration') return a.duration - b.duration;
+        if (sortBy === 'Rating') return a.rating - b.rating;
+        if (sortBy === 'Calories') return a.caloriesBurned - b.caloriesBurned;
+
+        return 0;
+    })
+
+    const totalExercise = currentList.length;
+    const totalTime = currentList.reduce((sum, item) => sum + item.duration, 0,
+    )
+
+    const totalCalori = currentList.reduce((sum, item) => sum + item.caloriesBurned, 0,
+    )
+
+    const renderTabContent = () => {
+        if (sortedList.length === 0) {
+            return (
+                <>
+                    <h2>Nothing here yet</h2>
+                </>
+            )
+        }
+        return (
+            <div>
+                {sortedList.map((item) => (
+
+                    <h2 key={item.id}>Hello</h2>
+                ))}
+            </div>
+        )
+    }
+
     return (
         <div className='container flex flex-col mx-auto gap-2'>
             <div className="stats shadow">
@@ -20,9 +65,9 @@ const MyBuild = () => {
                             ></path>
                         </svg>
                     </div>
-                    <div className="stat-title">Downloads</div>
-                    <div className="stat-value">31K</div>
-                    <div className="stat-desc">Jan 1st - Feb 1st</div>
+                    <div className="stat-title">Exercises</div>
+                    <div className="stat-value text-[#CCFF00]">{totalExercise}</div>
+                    
                 </div>
 
                 <div className="stat">
@@ -41,9 +86,9 @@ const MyBuild = () => {
                             ></path>
                         </svg>
                     </div>
-                    <div className="stat-title">New Users</div>
-                    <div className="stat-value">4,200</div>
-                    <div className="stat-desc">↗︎ 400 (22%)</div>
+                    <div className="stat-title">Minutes</div>
+                    <div className="stat-value">{totalTime}</div>
+                   
                 </div>
 
                 <div className="stat">
@@ -62,35 +107,44 @@ const MyBuild = () => {
                             ></path>
                         </svg>
                     </div>
-                    <div className="stat-title">New Registers</div>
-                    <div className="stat-value">1,200</div>
-                    <div className="stat-desc">↘︎ 90 (14%)</div>
+                    <div className="stat-title">Calories</div>
+                    <div className="stat-value">{totalCalori}</div>
+                    
                 </div>
             </div>
 
             <>
 
                 <div className="tabs tabs-box">
-                    <input type="radio" name="my_tabs_6" className="tab" aria-label="Tab 1" />
+                    <input type="radio"
+                        name="my_tabs_6"
+                        className="tab"
+                        aria-label="Today's Plan"
+                        checked={activeTab === "plan"}
+                        onChange={() => setActiveTab('plan')}
+                    />
                     <div className="tab-content bg-base-100 border-base-300 p-6">
-                        Tab content 1
+                        {renderTabContent()}
                     </div>
+
                     <input
                         type="radio"
                         name="my_tabs_6"
                         className="tab"
-                        aria-label="Tab 2"
-                        defaultChecked
+                        aria-label="Saved"
+                        onChange={() => setActiveTab('saved')}
+
                     />
                     <div className="tab-content bg-base-100 border-base-300 p-6">
-                        Tab content 2
+                        {renderTabContent()}
                     </div>
-                    
-                    <select defaultValue="Pick a color" className="select ms-auto">
-                        <option disabled={true}>Pick a color</option>
-                        <option>Crimson</option>
-                        <option>Amber</option>
-                        <option>Velvet</option>
+
+
+                    <select onChange={(e) => setSortBy(e.target.value as 'Duration' | 'Rating' | 'Calories')}
+                        defaultValue="Duration" className="select ms-auto">
+                        <option value='Duration'>Duration</option>
+                        <option value='Calories'>Calories</option>
+                        <option value='Rating'>Rating</option>
                     </select>
                 </div>
             </>

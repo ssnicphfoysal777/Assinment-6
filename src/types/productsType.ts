@@ -13,3 +13,10 @@ export interface IProducts {
   description: string;
   instructions: string[];
 }
+
+export interface IProductsContext {
+  planlist:IProducts[],
+  setPlanlist:React.Dispatch<React.SetStateAction<IProducts[]>>;
+  savelist:IProducts[],
+  setSavelist:React.Dispatch<React.SetStateAction<IProducts[]>>
+}

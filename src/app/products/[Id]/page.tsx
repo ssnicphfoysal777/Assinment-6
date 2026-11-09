@@ -1,3 +1,4 @@
+import DetailsPageButton from "@/components/DetailsPageButton";
 import { getSingleProduct } from "@/lib/api";
 import { Suspense } from "react";
 
@@ -110,16 +111,7 @@ const ProductDetailsPage = async ({
             </div>
 
             {/* Buttons */}
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button className="rounded-lg bg-lime-400 px-4 py-3 text-xs font-bold text-black transition hover:bg-lime-300">
-                ▣ Add to today's plan
-              </button>
-
-              <button className="rounded-lg border border-gray-700 px-4 py-3 text-xs text-gray-300 transition hover:bg-gray-800">
-                ♧ Save for later
-              </button>
-            </div>
-
+            <DetailsPageButton product={product}/>
           </div>
         </div>
       </div>
