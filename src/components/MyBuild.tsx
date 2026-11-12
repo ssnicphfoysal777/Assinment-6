@@ -1,159 +1,261 @@
+
 'use client'
+
 import { useProductContext } from '@/context/product';
 import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+
 const MyBuild = () => {
     const { planlist, setPlanlist, savelist, setSavelist } =
         useProductContext();
-    const [activeTab, setActiveTab] = useState<"plan" | "saved">("plan")
 
-    const [sortBy, setSortBy] = useState<'Duration' | 'Rating' | 'Calories'>('Duration')
-    const [orderID, setOrderID] = useState<number[]>([])
+    const [activeTab, setActiveTab] = useState<'plan' | 'saved'>('plan');
+
+    const [sortBy, setSortBy] = useState<'Duration' | 'Rating' | 'Calories'>('Duration');
+
+    const [completedIds, setCompletedIds] = useState<number[]>([]);
 
     const currentList = activeTab === 'plan' ? planlist : savelist;
 
-
-    console.log(sortBy);
+    // Sorting
     const sortedList = [...currentList].sort((a, b) => {
         if (sortBy === 'Duration') return a.duration - b.duration;
         if (sortBy === 'Rating') return a.rating - b.rating;
         if (sortBy === 'Calories') return a.caloriesBurned - b.caloriesBurned;
 
         return 0;
-    })
+    });
 
+    // Statistics
     const totalExercise = currentList.length;
-    const totalTime = currentList.reduce((sum, item) => sum + item.duration, 0,
-    )
 
-    const totalCalori = currentList.reduce((sum, item) => sum + item.caloriesBurned, 0,
-    )
+    const totalTime = currentList.reduce(
+        (sum, item) => sum + item.duration, 0
+    );
 
+    const totalCalori = currentList.reduce(
+        (sum, item) => sum + item.caloriesBurned, 0
+    );
+
+    // Mark as Done
+    const handleMarkDone = (id: number) => {
+        setCompletedIds(prev =>
+            prev.includes(id)
+                ? prev.filter(item => item !== id)
+                : [...prev, id]
+        );
+    };
+
+    // Remove Exercise
+    const handleRemove = (id: number) => {
+        if (activeTab === 'plan') {
+            setPlanlist(prev => prev.filter(item => item.id !== id));
+        } else {
+            setSavelist(prev => prev.filter(item => item.id !== id));
+        }
+
+        setCompletedIds(prev => prev.filter(item => item !== id));
+    };
+
+    // Card List
     const renderTabContent = () => {
         if (sortedList.length === 0) {
             return (
-                <>
-                    <h2>Nothing here yet</h2>
-                </>
-            )
+                <div className="rounded-xl border border-gray-800 bg-[#15171d] py-12 text-center">
+                    <h2 className="text-lg font-bold text-white">
+                        Nothing here yet
+                    </h2>
+                    <p className="mt-2 text-sm text-gray-400">
+                        Add some exercises to get started.
+                    </p>
+                </div>
+            );
         }
-        return (
-            <div>
-                {sortedList.map((item) => (
 
-                    <h2 key={item.id}>Hello</h2>
-                ))}
+        return (
+            <div className="flex flex-col gap-3">
+
+                {sortedList.map((item) => {
+                    const isCompleted = completedIds.includes(item.id);
+
+                    return (
+                        <div
+                            key={item.id}
+                            className="flex flex-col gap-4 rounded-xl border border-gray-800 bg-[#15171d] p-3 text-white transition-all duration-300 hover:border-gray-600 sm:flex-row sm:items-center"
+                        >
+
+                            {/* Exercise Image */}
+                            <div className="relative h-24 w-full shrink-0 overflow-hidden rounded-lg sm:h-16 sm:w-24">
+                                <Image
+                                    src={item.image}
+                                    alt={item.name}
+                                    fill
+                                    sizes="(max-width: 640px) 100vw, 96px"
+                                    className="object-cover"
+                                />
+                            </div>
+
+                            {/* Exercise Details */}
+                            <div className="min-w-0 flex-1">
+
+                                <h2 className={`text-sm font-extrabold uppercase tracking-wide ${
+                                    isCompleted ? 'text-gray-500 line-through' : 'text-white'
+                                }`}>
+                                    {item.name}
+                                </h2>
+
+                                <p className="mt-1 text-xs text-gray-400">
+                                    {item.equipment}
+                                </p>
+
+                                {/* Exercise Stats */}
+                                <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-gray-400">
+
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-lime-400">◷</span>
+                                        <span>{item.duration} min</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-1">
+                                        <span>🔥</span>
+                                        <span>{item.caloriesBurned} kcal</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-lime-400">☆</span>
+                                        <span>{item.rating}</span>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex shrink-0 items-center gap-2">
+
+                                {/* View Details */}
+                                <Link
+                                    href={`/products/${item.id}`}
+                                    className="whitespace-nowrap rounded-full border border-gray-700 px-4 py-2 text-[10px] text-gray-300 transition hover:border-gray-500 hover:bg-gray-800"
+                                >
+                                    View Details
+                                </Link>
+
+                                {/* Mark as Done */}
+                                <button
+                                    type="button"
+                                    onClick={() => handleMarkDone(item.id)}
+                                    className={`whitespace-nowrap rounded-full px-4 py-2 text-[10px] font-bold transition ${
+                                        isCompleted
+                                            ? 'bg-gray-700 text-white'
+                                            : 'bg-[#CCFF00] text-black hover:bg-lime-300'
+                                    }`}
+                                >
+                                    ✓ {isCompleted ? 'Completed' : 'Mark as Done'}
+                                </button>
+
+                                {/* Remove */}
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemove(item.id)}
+                                    className="px-1 text-lg text-gray-500 transition hover:text-red-500"
+                                    aria-label="Remove exercise"
+                                >
+                                    ×
+                                </button>
+
+                            </div>
+
+                        </div>
+                    );
+                })}
+
             </div>
-        )
-    }
+        );
+    };
 
     return (
-        <div className='container flex flex-col mx-auto gap-2'>
+        <div className="container mx-auto flex flex-col gap-4">
+
+            {/* Statistics - তোমার আগের অংশ */}
             <div className="stats shadow">
+
                 <div className="stat">
-                    <div className="stat-figure text-secondary">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            className="inline-block h-8 w-8 stroke-current"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            ></path>
-                        </svg>
-                    </div>
                     <div className="stat-title">Exercises</div>
-                    <div className="stat-value text-[#CCFF00]">{totalExercise}</div>
-                    
+                    <div className="stat-value text-[#CCFF00]">
+                        {totalExercise}
+                    </div>
                 </div>
 
                 <div className="stat">
-                    <div className="stat-figure text-secondary">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            className="inline-block h-8 w-8 stroke-current"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                            ></path>
-                        </svg>
-                    </div>
                     <div className="stat-title">Minutes</div>
-                    <div className="stat-value">{totalTime}</div>
-                   
+                    <div className="stat-value">
+                        {totalTime}
+                    </div>
                 </div>
 
                 <div className="stat">
-                    <div className="stat-figure text-secondary">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            className="inline-block h-8 w-8 stroke-current"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-                            ></path>
-                        </svg>
-                    </div>
                     <div className="stat-title">Calories</div>
-                    <div className="stat-value">{totalCalori}</div>
-                    
+                    <div className="stat-value">
+                        {totalCalori}
+                    </div>
                 </div>
+
             </div>
 
-            <>
+            {/* Tabs and Sorting */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
 
-                <div className="tabs tabs-box">
-                    <input type="radio"
-                        name="my_tabs_6"
-                        className="tab"
-                        aria-label="Today's Plan"
-                        checked={activeTab === "plan"}
-                        onChange={() => setActiveTab('plan')}
-                    />
-                    <div className="tab-content bg-base-100 border-base-300 p-6">
-                        {renderTabContent()}
-                    </div>
+                <div className="flex items-center gap-2 rounded-lg bg-[#15171d] p-1">
 
-                    <input
-                        type="radio"
-                        name="my_tabs_6"
-                        className="tab"
-                        aria-label="Saved"
-                        onChange={() => setActiveTab('saved')}
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('plan')}
+                        className={`rounded-md px-4 py-2 text-xs font-semibold transition ${
+                            activeTab === 'plan'
+                                ? 'bg-gray-800 text-white'
+                                : 'text-gray-400 hover:text-white'
+                        }`}
+                    >
+                        Today's Plan
+                    </button>
 
-                    />
-                    <div className="tab-content bg-base-100 border-base-300 p-6">
-                        {renderTabContent()}
-                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('saved')}
+                        className={`rounded-md px-4 py-2 text-xs font-semibold transition ${
+                            activeTab === 'saved'
+                                ? 'bg-gray-800 text-white'
+                                : 'text-gray-400 hover:text-white'
+                        }`}
+                    >
+                        Saved
+                    </button>
 
+                </div>
 
-                    <select onChange={(e) => setSortBy(e.target.value as 'Duration' | 'Rating' | 'Calories')}
-                        defaultValue="Duration" className="select ms-auto">
-                        <option value='Duration'>Duration</option>
-                        <option value='Calories'>Calories</option>
-                        <option value='Rating'>Rating</option>
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <span>Sort By</span>
+
+                    <select
+                        value={sortBy}
+                        onChange={(e) =>
+                            setSortBy(e.target.value as 'Duration' | 'Rating' | 'Calories')
+                        }
+                        className="select select-sm border-gray-700 bg-[#15171d] text-white"
+                    >
+                        <option value="Duration">Duration</option>
+                        <option value="Calories">Calories</option>
+                        <option value="Rating">Rating</option>
                     </select>
                 </div>
-            </>
 
+            </div>
+
+            {/* Exercise Cards */}
+            {renderTabContent()}
 
         </div>
-
-
-
     );
 };
 
